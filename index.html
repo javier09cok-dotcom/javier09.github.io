@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raspadita Fortuna $0.50 - ¡Gana hasta $20!</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Tone.js para efectos de sonido sintéticos (sin archivos externos) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <script>
@@ -47,8 +42,6 @@
             color: #ffffff;
             touch-action: manipulation;
         }
-
-        /* Brillo dorado animado */
         .gold-gradient-text {
             background: linear-gradient(135deg, #fff7ed 0%, #fde047 50%, #ca8a04 100%);
             -webkit-background-clip: text;
@@ -77,7 +70,7 @@
             transform: translateY(1px);
         }
 
-        /* Animaciones para la tarjeta */
+
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); }
             50% { box-shadow: 0 0 25px rgba(250, 204, 21, 0.8); }
@@ -87,7 +80,7 @@
             animation: pulseGlow 2s infinite;
         }
 
-        /* Transiciones suaves */
+
         .scratch-cell {
             position: relative;
             user-select: none;
@@ -136,7 +129,7 @@
         </div>
     </div>
 
-    <!-- Encabezado / Billetera y Modo Admin -->
+
     <header class="w-full max-w-2xl flex flex-wrap justify-between items-center bg-casino-card/90 border border-purple-500/30 p-3 sm:p-4 rounded-2xl backdrop-blur-md shadow-xl gap-3">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-900 shadow-md">
@@ -151,7 +144,6 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <!-- Botón Panel Admin -->
             <button id="adminPanelBtn" onclick="toggleAdminPanel()" class="hidden bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold items-center gap-1.5 transition active:scale-95">
                 <i class="fa-solid fa-shield-halved text-amber-400"></i>
                 Panel Admin
@@ -165,7 +157,6 @@
         </div>
     </header>
 
-    <!-- Modal / Panel de Administración -->
     <div id="adminModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-casino-card border-2 border-amber-500/60 rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             
@@ -179,7 +170,6 @@
                 </button>
             </div>
 
-            <!-- Formulario Crear Usuario -->
             <div class="bg-purple-950/60 border border-purple-500/30 p-4 rounded-2xl space-y-3">
                 <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-user-plus"></i> Crear Nuevo Usuario
@@ -194,13 +184,11 @@
                 </div>
             </div>
 
-            <!-- Lista de Usuarios y Recarga de Saldo -->
             <div class="space-y-3">
                 <h3 class="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-users"></i> Lista de Usuarios Registrados
                 </h3>
                 <div id="usersListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                    <!-- Filas generadas dinámicamente -->
                 </div>
             </div>
 
@@ -212,7 +200,6 @@
         </div>
     </div>
 
-    <!-- Título y Tabla de Premios -->
     <main class="w-full max-w-2xl flex flex-col items-center my-4 space-y-4">
         
         <div class="text-center space-y-1">
@@ -222,7 +209,6 @@
             <p class="text-xs sm:text-sm text-purple-300 font-medium">¡Raspa los 6 casilleros y descubre tus símbolos de la suerte!</p>
         </div>
 
-        <!-- Tabla de Premios -->
         <div class="w-full grid grid-cols-2 gap-3 text-center">
             <div class="bg-gradient-to-r from-amber-950/60 to-purple-950/80 border border-amber-500/40 p-2.5 sm:p-3 rounded-xl flex items-center justify-between px-4">
                 <div class="text-left">
@@ -241,14 +227,11 @@
             </div>
         </div>
 
-        <!-- Tarjeta de Raspadita -->
         <div class="w-full bg-casino-card border-2 border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden card-active">
             
-            <!-- Marca de Agua / Decoración -->
             <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div class="absolute -left-8 -bottom-8 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
-            <!-- Banner Superior de la Tarjeta -->
             <div class="flex justify-between items-center mb-4 border-b border-purple-500/20 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-500/30">Costo: $0.50</span>
@@ -259,18 +242,17 @@
                 </span>
             </div>
 
-            <!-- Grilla de 6 Casillas (2 Filas x 3 Columnas) -->
             <div class="grid grid-cols-3 gap-3 sm:gap-4 max-w-md mx-auto my-2" id="gridContainer">
                 <!-- Generado dinámicamente -->
             </div>
 
-            <!-- Mensaje de Resultado -->
+
             <div id="resultBanner" class="mt-4 min-h-[48px] flex items-center justify-center text-center transition-all">
                 <p class="text-sm text-purple-300 italic">Haz clic en "Comprar Raspadita" para iniciar un nuevo juego.</p>
             </div>
         </div>
 
-        <!-- Panel de Controles / Botones -->
+
         <div class="w-full flex flex-col sm:flex-row gap-3">
             <button id="buyBtn" onclick="buyCard()" class="gold-btn flex-1 py-3.5 px-6 rounded-2xl font-black text-base sm:text-lg flex items-center justify-center gap-2 transition-all">
                 <i class="fa-solid fa-ticket"></i>
@@ -283,7 +265,6 @@
             </button>
         </div>
 
-        <!-- Panel Estadísticas / Historial (Acordeón o pestaña) -->
         <div class="w-full bg-casino-card/60 border border-purple-500/20 rounded-2xl p-4 text-xs sm:text-sm text-purple-200 space-y-2">
             <div class="flex justify-between items-center text-purple-300 font-bold border-b border-purple-500/20 pb-2">
                 <span><i class="fa-solid fa-chart-pie mr-1"></i> Estadísticas de Sesión</span>
@@ -307,14 +288,11 @@
 
     </main>
 
-    <!-- Footer -->
     <footer class="text-center text-[11px] text-purple-400/60 my-2">
         Raspadita Fortuna Virtual &bull; Solo entretenimiento &bull; Probabilidades transparentes
     </footer>
 
-    <!-- Lógica del Juego en JavaScript -->
     <script>
-        // --- CONFIGURACIÓN Y ESTADO DEL JUEGO ---
         const TICKET_PRICE = 0.50;
         const PRIZE_4 = 20.00;
         const PRIZE_3 = 15.00;
@@ -331,14 +309,12 @@
         let scratchedCells = [false, false, false, false, false, false];
         let gameEvaluated = false;
 
-        // Estadísticas
         let stats = {
             played: 0,
             spent: 0.00,
             won: 0.00
         };
 
-        // --- GESTIÓN DE USUARIOS Y ADMIN ---
         function updateUsersUI() {
             const listContainer = document.getElementById('usersListContainer');
             listContainer.innerHTML = '';
@@ -684,7 +660,6 @@
             }
         }
 
-        // Símbolos temáticos con FontAwesome y nombres
         const SYMBOLS = [
             { id: 'clover', icon: 'fa-clover', color: 'text-emerald-400', name: 'Trébol' },
             { id: 'diamond', icon: 'fa-gem', color: 'text-cyan-400', name: 'Diamante' },
@@ -694,7 +669,6 @@
             { id: 'crown', icon: 'fa-crown', color: 'text-amber-400', name: 'Corona' }
         ];
 
-        // --- SINTETIZADOR DE SONIDOS CON TONE.JS ---
         function playScratchSound() {
             if (!soundEnabled) return;
             try {
@@ -743,13 +717,11 @@
                 cellDiv.className = 'scratch-cell h-24 sm:h-28 bg-gradient-to-b from-purple-900 to-indigo-950 border border-purple-500/40 rounded-2xl overflow-hidden flex flex-col items-center justify-center relative shadow-inner';
                 cellDiv.id = `cell-${i}`;
 
-                // Capa inferior (Símbolo Oculto)
                 const symbolContainer = document.createElement('div');
                 symbolContainer.className = 'flex flex-col items-center justify-center w-full h-full p-2';
                 symbolContainer.id = `symbol-${i}`;
                 symbolContainer.innerHTML = `<i class="fa-solid fa-question text-purple-600/50 text-2xl"></i>`;
 
-                // Capa Superior (Canvas Rascable)
                 const canvas = document.createElement('canvas');
                 canvas.className = 'scratch-canvas';
                 canvas.id = `canvas-${i}`;
@@ -760,7 +732,6 @@
             }
         }
 
-        // Dibuja la cubierta de raspado metálica dorada en una casilla
         function drawScratchCover(index) {
             const canvas = document.getElementById(`canvas-${index}`);
             if (!canvas) return;
@@ -770,7 +741,6 @@
             canvas.width = rect.width || 120;
             canvas.height = rect.height || 110;
 
-            // Gradiente metálico dorado/plateado
             const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
             grad.addColorStop(0, '#fef08a');
             grad.addColorStop(0.3, '#eab308');
@@ -780,7 +750,6 @@
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Patrón o texto decorativo "RASPA"
             ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
             ctx.font = 'bold 12px Poppins, sans-serif';
             ctx.textAlign = 'center';
@@ -788,16 +757,15 @@
             ctx.fillText('FORTUNA', canvas.width / 2, canvas.height / 2 - 8);
             ctx.fillText('✨ RASPA ✨', canvas.width / 2, canvas.height / 2 + 10);
 
-            // Borde brillante
             ctx.strokeStyle = 'rgba(255,255,255,0.4)';
             ctx.lineWidth = 4;
             ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-            // Eventos de raspado
+
             attachScratchEvents(canvas, index);
         }
 
-        // --- LÓGICA DE INTERACCIÓN CON EL CANVAS (RASPAR) ---
+
         function attachScratchEvents(canvas, index) {
             const ctx = canvas.getContext('2d');
             let isDrawing = false;
@@ -830,18 +798,18 @@
                 };
             }
 
-            // Mouse Events
+
             canvas.addEventListener('mousedown', (e) => { isDrawing = true; const pos = getPos(e); scratch(pos.x, pos.y); });
             canvas.addEventListener('mousemove', (e) => { if (isDrawing) { const pos = getPos(e); scratch(pos.x, pos.y); } });
             window.addEventListener('mouseup', () => { isDrawing = false; });
 
-            // Touch Events
+
+            
             canvas.addEventListener('touchstart', (e) => { isDrawing = true; const pos = getPos(e); scratch(pos.x, pos.y); e.preventDefault(); });
             canvas.addEventListener('touchmove', (e) => { if (isDrawing) { const pos = getPos(e); scratch(pos.x, pos.y); e.preventDefault(); } });
             canvas.addEventListener('touchend', () => { isDrawing = false; });
         }
 
-        // Calcular qué porcentaje de la casilla se ha raspado
         function checkScratchPercent(index) {
             if (scratchedCells[index] || !cardActive) return;
 
@@ -850,7 +818,6 @@
             const width = canvas.width;
             const height = canvas.height;
             
-            // Sub-muestreo rápido de píxeles
             const imageData = ctx.getImageData(0, 0, width, height);
             const pixels = imageData.data;
             let transparentPixels = 0;
@@ -864,7 +831,6 @@
             const totalSampled = pixels.length / 16;
             const percent = (transparentPixels / totalSampled) * 100;
 
-            // Si se raspa más del 40%, revelamos la casilla por completo
             if (percent > 40) {
                 scratchedCells[index] = true;
                 canvas.style.transition = 'opacity 0.3s ease';
@@ -877,27 +843,20 @@
             }
         }
 
-        // --- GENERADOR DE SIMBOLOS CON PROBABILIDADES ---
         function generateTicketSymbols() {
-            // Generación de combinación
-            // Queremos dar premios realistas e interesantes.
             const rand = Math.random();
             let chosenSymbols = [];
 
             if (rand < 0.08) {
-                // 8% de probabilidad: Ganador de 4 símbolos ($20)
                 const winSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
                 chosenSymbols = [winSymbol, winSymbol, winSymbol, winSymbol];
-                // Llenar los otros 2 con distintos
                 while (chosenSymbols.length < 6) {
                     const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
                     chosenSymbols.push(randomSym);
                 }
             } else if (rand < 0.32) {
-                // 24% de probabilidad: Ganador de 3 símbolos ($15)
                 const winSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
                 chosenSymbols = [winSymbol, winSymbol, winSymbol];
-                // Llenar los otros 3 evitando llegar a 4 iguales
                 while (chosenSymbols.length < 6) {
                     const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
                     const count = chosenSymbols.filter(s => s.id === randomSym.id).length;
