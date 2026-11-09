@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspadita Fortuna $0.50 - ¡Gana hasta $20!</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Tone.js para efectos de sonido sintéticos (sin archivos externos) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            300: '#fde047',
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                            700: '#a16207',
+                        },
+                        casino: {
+                            purple: '#1a0b2e',
+                            card: '#2a124d',
+                            accent: '#f43f5e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #2e1065 0%, #0f051d 100%);
+            color: #ffffff;
+            touch-action: manipulation;
+        }
+
+        /* Brillo dorado animado */
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fff7ed 0%, #fde047 50%, #ca8a04 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-border {
+            border: 2px solid #facc15;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.3);
+        }
+
+        .gold-btn {
+            background: linear-gradient(180deg, #fde047 0%, #eab308 50%, #ca8a04 100%);
+            color: #1e0a38;
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .gold-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, #fef08a 0%, #facc15 50%, #a16207 100%);
+            box-shadow: 0 6px 20px rgba(250, 204, 21, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .gold-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        /* Animaciones para la tarjeta */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(250, 204, 21, 0.8); }
+        }
+
+        .card-active {
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Transiciones suaves */
+        .scratch-cell {
+            position: relative;
+            user-select: none;
+        }
+        
+        .scratch-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 10;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 select-none">
+
+    <div id="authScreen" class="fixed inset-0 bg-[#0f051d]/95 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-casino-card border-2 border-amber-500/60 rounded-3xl p-6 shadow-2xl space-y-5">
+            <div class="text-center">
+                <h1 class="text-3xl font-black gold-gradient-text">Fortuna Dorada</h1>
+                <p class="text-sm text-purple-300 mt-1">Inicia sesión para jugar</p>
+            </div>
+
+            <form id="adminSetupForm" class="hidden space-y-3" onsubmit="createAdminAccount(event)">
+                <h2 class="text-lg font-bold text-amber-300">Configurar cuenta de administrador</h2>
+                <p class="text-xs text-purple-300">Crea la cuenta admin inicial para gestionar usuarios y saldos.</p>
+                <input id="adminSetupName" type="text" autocomplete="username" required maxlength="30" value="admin" placeholder="Usuario administrador" class="w-full bg-purple-950 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
+                <input id="adminSetupPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Contraseña (mínimo 8 caracteres)" class="w-full bg-purple-950 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
+                <input id="adminSetupPasswordConfirm" type="password" autocomplete="new-password" required minlength="8" placeholder="Confirmar contraseña" class="w-full bg-purple-950 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
+                <button type="submit" class="gold-btn w-full font-bold py-3 rounded-xl">Crear cuenta admin</button>
+            </form>
+
+            <form id="loginForm" class="hidden space-y-3" onsubmit="login(event)">
+                <input id="loginName" type="text" autocomplete="username" required maxlength="30" placeholder="Usuario" class="w-full bg-purple-950 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
+                <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Contraseña" class="w-full bg-purple-950 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
+                <button type="submit" class="gold-btn w-full font-bold py-3 rounded-xl">Iniciar sesión</button>
+            </form>
+
+            <p id="authMessage" role="alert" class="hidden text-sm text-rose-300 text-center"></p>
+            <p class="text-[11px] leading-relaxed text-purple-400 border-t border-purple-500/20 pt-3">
+                Los datos y la sesión se guardan en este navegador. Esta versión local es para demostración: no ofrece autenticación segura ni sincronización entre dispositivos.
+            </p>
+        </div>
+    </div>
+
+    <!-- Encabezado / Billetera y Modo Admin -->
+    <header class="w-full max-w-2xl flex flex-wrap justify-between items-center bg-casino-card/90 border border-purple-500/30 p-3 sm:p-4 rounded-2xl backdrop-blur-md shadow-xl gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-900 shadow-md">
+                <i class="fa-solid fa-user-gear text-xl"></i>
+            </div>
+            <div>
+                <span class="text-xs text-purple-300 font-semibold uppercase tracking-wider block" id="currentUserLabel">Usuario Activo</span>
+                <div class="flex items-center gap-2">
+                    <span id="balanceDisplay" class="text-xl font-black text-amber-400 font-mono">$10.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Botón Panel Admin -->
+            <button id="adminPanelBtn" onclick="toggleAdminPanel()" class="hidden bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold items-center gap-1.5 transition active:scale-95">
+                <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                Panel Admin
+            </button>
+            <button onclick="logout()" class="bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/30 px-3 py-2 rounded-xl text-xs font-bold transition">
+                Cerrar sesión
+            </button>
+            <button onclick="toggleSound()" id="soundBtn" class="bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/30 p-2.5 rounded-xl text-sm transition">
+                <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Modal / Panel de Administración -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-casino-card border-2 border-amber-500/60 rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            
+            <div class="flex justify-between items-center border-b border-purple-500/30 pb-3">
+                <h2 class="text-xl font-extrabold gold-gradient-text flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-400"></i>
+                    Gestión de Usuarios y Saldos
+                </h2>
+                <button onclick="toggleAdminPanel()" class="text-purple-300 hover:text-white text-lg px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Formulario Crear Usuario -->
+            <div class="bg-purple-950/60 border border-purple-500/30 p-4 rounded-2xl space-y-3">
+                <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-plus"></i> Crear Nuevo Usuario
+                </h3>
+                <div class="grid sm:grid-cols-2 gap-2">
+                    <input type="text" id="newUserName" maxlength="30" placeholder="Nombre de usuario" class="bg-purple-900/80 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-purple-400 focus:outline-none focus:border-amber-400">
+                    <input type="password" id="newUserPassword" minlength="8" placeholder="Contraseña (mínimo 8)" class="bg-purple-900/80 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-purple-400 focus:outline-none focus:border-amber-400">
+                    <input type="number" id="newUserBalance" placeholder="Saldo inicial ($)" step="0.50" min="0" value="10" class="bg-purple-900/80 border border-purple-500/40 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-purple-400 focus:outline-none focus:border-amber-400">
+                    <button onclick="createNewUser()" class="gold-btn font-bold px-4 py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Crear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Usuarios y Recarga de Saldo -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-users"></i> Lista de Usuarios Registrados
+                </h3>
+                <div id="usersListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <!-- Filas generadas dinámicamente -->
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button onclick="toggleAdminPanel()" class="bg-purple-800/80 hover:bg-purple-700 text-purple-200 border border-purple-500/40 px-5 py-2 rounded-xl text-xs font-bold">
+                    Cerrar Panel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Título y Tabla de Premios -->
+    <main class="w-full max-w-2xl flex flex-col items-center my-4 space-y-4">
+        
+        <div class="text-center space-y-1">
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight gold-gradient-text uppercase drop-shadow-md">
+                Fortuna Dorada
+            </h1>
+            <p class="text-xs sm:text-sm text-purple-300 font-medium">¡Raspa los 6 casilleros y descubre tus símbolos de la suerte!</p>
+        </div>
+
+        <!-- Tabla de Premios -->
+        <div class="w-full grid grid-cols-2 gap-3 text-center">
+            <div class="bg-gradient-to-r from-amber-950/60 to-purple-950/80 border border-amber-500/40 p-2.5 sm:p-3 rounded-xl flex items-center justify-between px-4">
+                <div class="text-left">
+                    <span class="text-[10px] sm:text-xs text-amber-300 font-bold uppercase block">Gran Premio</span>
+                    <span class="text-xs sm:text-sm text-slate-200 font-medium">4 Símbolos Iguales</span>
+                </div>
+                <span class="text-lg sm:text-2xl font-black text-amber-400 font-mono">$20.00</span>
+            </div>
+
+            <div class="bg-gradient-to-r from-purple-950/80 to-indigo-950/60 border border-purple-400/30 p-2.5 sm:p-3 rounded-xl flex items-center justify-between px-4">
+                <div class="text-left">
+                    <span class="text-[10px] sm:text-xs text-purple-300 font-bold uppercase block">Premio Medio</span>
+                    <span class="text-xs sm:text-sm text-slate-200 font-medium">3 Símbolos Iguales</span>
+                </div>
+                <span class="text-lg sm:text-2xl font-black text-emerald-400 font-mono">$15.00</span>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Raspadita -->
+        <div class="w-full bg-casino-card border-2 border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden card-active">
+            
+            <!-- Marca de Agua / Decoración -->
+            <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -left-8 -bottom-8 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            <!-- Banner Superior de la Tarjeta -->
+            <div class="flex justify-between items-center mb-4 border-b border-purple-500/20 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-500/30">Costo: $0.50</span>
+                    <span id="ticketIdDisplay" class="text-[11px] text-purple-300 font-mono">Boleto: #----</span>
+                </div>
+                <span id="statusBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-900/80 text-purple-300 border border-purple-500/30">
+                    Comprar para Jugar
+                </span>
+            </div>
+
+            <!-- Grilla de 6 Casillas (2 Filas x 3 Columnas) -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 max-w-md mx-auto my-2" id="gridContainer">
+                <!-- Generado dinámicamente -->
+            </div>
+
+            <!-- Mensaje de Resultado -->
+            <div id="resultBanner" class="mt-4 min-h-[48px] flex items-center justify-center text-center transition-all">
+                <p class="text-sm text-purple-300 italic">Haz clic en "Comprar Raspadita" para iniciar un nuevo juego.</p>
+            </div>
+        </div>
+
+        <!-- Panel de Controles / Botones -->
+        <div class="w-full flex flex-col sm:flex-row gap-3">
+            <button id="buyBtn" onclick="buyCard()" class="gold-btn flex-1 py-3.5 px-6 rounded-2xl font-black text-base sm:text-lg flex items-center justify-center gap-2 transition-all">
+                <i class="fa-solid fa-ticket"></i>
+                <span>Comprar Raspadita ($0.50)</span>
+            </button>
+
+            <button id="revealBtn" onclick="revealAll()" disabled class="bg-purple-800/50 opacity-50 cursor-not-allowed hover:bg-purple-700 text-purple-200 border border-purple-500/40 py-3.5 px-5 rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Raspar Todo</span>
+            </button>
+        </div>
+
+        <!-- Panel Estadísticas / Historial (Acordeón o pestaña) -->
+        <div class="w-full bg-casino-card/60 border border-purple-500/20 rounded-2xl p-4 text-xs sm:text-sm text-purple-200 space-y-2">
+            <div class="flex justify-between items-center text-purple-300 font-bold border-b border-purple-500/20 pb-2">
+                <span><i class="fa-solid fa-chart-pie mr-1"></i> Estadísticas de Sesión</span>
+                <button onclick="resetStats()" class="text-[10px] text-purple-400 hover:text-amber-300 underline">Reiniciar</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                <div class="bg-purple-950/40 p-2 rounded-xl">
+                    <span class="block text-purple-400 text-[10px] uppercase">Jugados</span>
+                    <span id="statPlayed" class="font-bold text-sm text-slate-100 font-mono">0</span>
+                </div>
+                <div class="bg-purple-950/40 p-2 rounded-xl">
+                    <span class="block text-purple-400 text-[10px] uppercase">Gastado</span>
+                    <span id="statSpent" class="font-bold text-sm text-slate-100 font-mono">$0.00</span>
+                </div>
+                <div class="bg-purple-950/40 p-2 rounded-xl">
+                    <span class="block text-purple-400 text-[10px] uppercase">Ganancias</span>
+                    <span id="statWon" class="font-bold text-sm text-emerald-400 font-mono">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-[11px] text-purple-400/60 my-2">
+        Raspadita Fortuna Virtual &bull; Solo entretenimiento &bull; Probabilidades transparentes
+    </footer>
+
+    <!-- Lógica del Juego en JavaScript -->
+    <script>
+        // --- CONFIGURACIÓN Y ESTADO DEL JUEGO ---
+        const TICKET_PRICE = 0.50;
+        const PRIZE_4 = 20.00;
+        const PRIZE_3 = 15.00;
+        const DATA_STORAGE_KEY = 'fortunaDoradaDataV1';
+        const SESSION_STORAGE_KEY = 'fortunaDoradaSessionV1';
+
+        let users = [];
+        let currentUserId = null;
+        let balance = 10.00;
+        let soundEnabled = true;
+        let cardActive = false;
+        let cardScratched = false;
+        let currentTicketSymbols = [];
+        let scratchedCells = [false, false, false, false, false, false];
+        let gameEvaluated = false;
+
+        // Estadísticas
+        let stats = {
+            played: 0,
+            spent: 0.00,
+            won: 0.00
+        };
+
+        // --- GESTIÓN DE USUARIOS Y ADMIN ---
+        function updateUsersUI() {
+            const listContainer = document.getElementById('usersListContainer');
+            listContainer.innerHTML = '';
+            if (!users.some(user => user.id === currentUserId && user.role === 'admin')) {
+                return;
+            }
+
+            users.filter(u => u.role === 'player').forEach(u => {
+                const row = document.createElement('div');
+                row.className = 'bg-purple-950/40 border border-purple-500/20 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2';
+
+                const userInfo = document.createElement('div');
+                userInfo.className = 'flex items-center gap-2';
+                userInfo.innerHTML = '<i class="fa-solid fa-user text-purple-400"></i>';
+                const userDetails = document.createElement('div');
+                const userName = document.createElement('span');
+                userName.className = 'font-bold text-sm text-slate-100 block';
+                userName.textContent = u.name;
+                const userBalance = document.createElement('span');
+                userBalance.className = 'text-xs text-amber-400 font-mono font-bold';
+                userBalance.textContent = `$${u.balance.toFixed(2)}`;
+                userDetails.append(userName, userBalance);
+                userInfo.appendChild(userDetails);
+
+                const rechargeControls = document.createElement('div');
+                rechargeControls.className = 'flex items-center gap-1.5 w-full sm:w-auto';
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = `recharge-input-${u.id}`;
+                input.placeholder = 'Monto $';
+                input.step = '0.50';
+                input.min = '0.50';
+                input.className = 'bg-purple-900/90 border border-purple-500/30 text-xs px-2 py-1.5 rounded-lg text-slate-100 w-20 focus:outline-none focus:border-amber-400';
+                const rechargeButton = document.createElement('button');
+                rechargeButton.className = 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1';
+                rechargeButton.innerHTML = '<i class="fa-solid fa-plus"></i> Recargar';
+                rechargeButton.addEventListener('click', () => rechargeUserBalance(u.id));
+                rechargeControls.append(input, rechargeButton);
+                row.append(userInfo, rechargeControls);
+                listContainer.appendChild(row);
+            });
+        }
+
+        function showAuthMessage(message, isError = true) {
+            const messageElement = document.getElementById('authMessage');
+            messageElement.textContent = message;
+            messageElement.classList.toggle('hidden', !message);
+            messageElement.classList.toggle('text-rose-300', isError);
+            messageElement.classList.toggle('text-emerald-300', !isError);
+        }
+
+        function showAuthScreen(mode) {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('adminSetupForm').classList.toggle('hidden', mode !== 'setup');
+            document.getElementById('loginForm').classList.toggle('hidden', mode !== 'login');
+            showAuthMessage('');
+        }
+
+        function savePersistentData() {
+            try {
+                localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify({ users, stats }));
+                return true;
+            } catch (error) {
+                console.error('No se pudieron guardar los datos locales.', error);
+                alert('No se pudieron guardar los cambios en este navegador. Revisa el espacio disponible y los permisos de almacenamiento.');
+                return false;
+            }
+        }
+
+        async function createPasswordRecord(password) {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                new TextEncoder().encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits']
+            );
+            const hash = await crypto.subtle.deriveBits({
+                name: 'PBKDF2',
+                salt,
+                iterations: 210000,
+                hash: 'SHA-256'
+            }, keyMaterial, 256);
+
+            return {
+                passwordSalt: Array.from(salt, byte => byte.toString(16).padStart(2, '0')).join(''),
+                passwordHash: Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('')
+            };
+        }
+
+        async function verifyPassword(password, user) {
+            const salt = Uint8Array.from(user.passwordSalt.match(/.{2}/g), byte => parseInt(byte, 16));
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                new TextEncoder().encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits']
+            );
+            const hash = await crypto.subtle.deriveBits({
+                name: 'PBKDF2',
+                salt,
+                iterations: 210000,
+                hash: 'SHA-256'
+            }, keyMaterial, 256);
+            const passwordHash = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+            return passwordHash === user.passwordHash;
+        }
+
+        async function createAdminAccount(event) {
+            event.preventDefault();
+            if (users.length > 0) {
+                showAuthScreen('login');
+                return;
+            }
+
+            const name = document.getElementById('adminSetupName').value.trim();
+            const password = document.getElementById('adminSetupPassword').value;
+            const confirmation = document.getElementById('adminSetupPasswordConfirm').value;
+            if (!name || password.length < 8) {
+                showAuthMessage('Ingresa un usuario y una contraseña de al menos 8 caracteres.');
+                return;
+            }
+            if (password !== confirmation) {
+                showAuthMessage('Las contraseñas no coinciden.');
+                return;
+            }
+
+            try {
+                const admin = {
+                    id: 'usr_admin',
+                    name,
+                    balance: 50.00,
+                    role: 'admin',
+                    ...await createPasswordRecord(password)
+                };
+                users.push(admin);
+                if (!savePersistentData()) {
+                    users = [];
+                    return;
+                }
+                document.getElementById('loginName').value = name;
+                document.getElementById('adminSetupForm').reset();
+                showAuthScreen('login');
+                showAuthMessage('Cuenta admin creada. Inicia sesión para continuar.', false);
+            } catch (error) {
+                console.error('No se pudo crear la cuenta admin.', error);
+                showAuthMessage('No se pudo crear la cuenta. Este navegador debe permitir Web Crypto y almacenamiento local.');
+            }
+        }
+
+        async function login(event) {
+            event.preventDefault();
+            const name = document.getElementById('loginName').value.trim().toLocaleLowerCase();
+            const password = document.getElementById('loginPassword').value;
+            const user = users.find(candidate => candidate.name.toLocaleLowerCase() === name);
+            if (!user) {
+                showAuthMessage('Usuario o contraseña incorrectos.');
+                return;
+            }
+
+            try {
+                if (!await verifyPassword(password, user)) {
+                    showAuthMessage('Usuario o contraseña incorrectos.');
+                    return;
+                }
+                localStorage.setItem(SESSION_STORAGE_KEY, user.id);
+                document.getElementById('loginPassword').value = '';
+                currentUserId = user.id;
+                openApp();
+            } catch (error) {
+                console.error('No se pudo iniciar sesión.', error);
+                showAuthMessage('No se pudo iniciar sesión. Revisa los permisos de almacenamiento y que Web Crypto esté disponible.');
+            }
+        }
+
+        function openApp() {
+            const currentUser = users.find(user => user.id === currentUserId);
+            if (!currentUser) {
+                currentUserId = null;
+                showAuthScreen('login');
+                return;
+            }
+            balance = currentUser.balance;
+            document.getElementById('currentUserLabel').textContent =
+                `${currentUser.name}${currentUser.role === 'admin' ? ' · Administrador' : ''}`;
+            document.getElementById('adminPanelBtn').classList.toggle('hidden', currentUser.role !== 'admin');
+            document.getElementById('adminPanelBtn').classList.toggle('flex', currentUser.role === 'admin');
+            document.getElementById('authScreen').classList.add('hidden');
+            updateBalanceDisplay();
+            updateUsersUI();
+            updateStatsDisplay();
+        }
+
+        function initializeAuth() {
+            try {
+                const savedData = localStorage.getItem(DATA_STORAGE_KEY);
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (!Array.isArray(parsed.users) || !parsed.stats ||
+                        !Number.isFinite(parsed.stats.played) ||
+                        !Number.isFinite(parsed.stats.spent) || !Number.isFinite(parsed.stats.won)) {
+                        throw new Error('El formato de los datos guardados no es válido.');
+                    }
+                    users = parsed.users;
+                    stats = parsed.stats;
+                    if (users.some(user =>
+                        !user.id || typeof user.name !== 'string' ||
+                        !Number.isFinite(user.balance) ||
+                        !['admin', 'player'].includes(user.role) ||
+                        typeof user.passwordSalt !== 'string' ||
+                        typeof user.passwordHash !== 'string'
+                    ) || !users.some(user => user.role === 'admin')) {
+                        throw new Error('Las cuentas guardadas no son válidas o falta la cuenta admin.');
+                    }
+                }
+
+                if (users.length === 0) {
+                    showAuthScreen('setup');
+                    return;
+                }
+                const savedSessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+                const savedUser = users.find(user => user.id === savedSessionId);
+                if (savedUser) {
+                    currentUserId = savedUser.id;
+                    openApp();
+                } else {
+                    showAuthScreen('login');
+                }
+            } catch (error) {
+                console.error('No se pudieron cargar los datos locales.', error);
+                showAuthScreen('login');
+                showAuthMessage('No se pudieron leer los datos guardados. No se modificaron; revisa el almacenamiento del navegador.');
+            }
+        }
+
+        function logout() {
+            try {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+                currentUserId = null;
+                cardActive = false;
+                document.getElementById('adminModal').classList.add('hidden');
+                updateUsersUI();
+                document.getElementById('buyBtn').disabled = false;
+                document.getElementById('buyBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('revealBtn').disabled = true;
+                document.getElementById('revealBtn').className = 'bg-purple-800/50 opacity-50 cursor-not-allowed text-purple-200 border border-purple-500/40 py-3.5 px-5 rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-2';
+                document.getElementById('ticketIdDisplay').textContent = 'Boleto: #----';
+                document.getElementById('statusBadge').textContent = 'Comprar para Jugar';
+                showResultBanner('<p class="text-sm text-purple-300 italic">Haz clic en "Comprar Raspadita" para iniciar un nuevo juego.</p>');
+                initGrid();
+                showAuthScreen('login');
+            } catch (error) {
+                console.error('No se pudo cerrar la sesión.', error);
+                alert('No se pudo cerrar la sesión guardada en este navegador.');
+            }
+        }
+
+        async function createNewUser() {
+            if (!users.some(user => user.id === currentUserId && user.role === 'admin')) {
+                alert('Solo el administrador puede crear usuarios.');
+                return;
+            }
+            const nameInput = document.getElementById('newUserName');
+            const passwordInput = document.getElementById('newUserPassword');
+            const balanceInput = document.getElementById('newUserBalance');
+
+            const name = nameInput.value.trim();
+            const password = passwordInput.value;
+            const initialBalance = Number(balanceInput.value);
+
+            if (!name || password.length < 8 || !Number.isFinite(initialBalance) || initialBalance < 0) {
+                alert('Ingresa un usuario válido, una contraseña de al menos 8 caracteres y un saldo inicial válido.');
+                return;
+            }
+            if (users.some(user => user.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+                alert('Ese nombre de usuario ya existe.');
+                return;
+            }
+
+            try {
+                const newUser = {
+                    id: 'usr_' + Date.now(),
+                    name,
+                    balance: initialBalance,
+                    role: 'player',
+                    ...await createPasswordRecord(password)
+                };
+                users.push(newUser);
+                if (!savePersistentData()) {
+                    users.pop();
+                    return;
+                }
+                nameInput.value = '';
+                passwordInput.value = '';
+                balanceInput.value = '10';
+                updateUsersUI();
+                playBuySound();
+            } catch (error) {
+                console.error('No se pudo crear el usuario.', error);
+                alert('No se pudo crear el usuario. Comprueba que Web Crypto esté disponible en este navegador.');
+            }
+        }
+
+        function rechargeUserBalance(userId) {
+            if (!users.some(user => user.id === currentUserId && user.role === 'admin')) {
+                alert('Solo el administrador puede recargar saldos.');
+                return;
+            }
+            const input = document.getElementById(`recharge-input-${userId}`);
+            const amount = parseFloat(input.value);
+
+            if (!Number.isFinite(amount) || amount <= 0) {
+                alert('Ingrese un monto válido a recargar');
+                return;
+            }
+
+            const user = users.find(candidate => candidate.id === userId && candidate.role === 'player');
+            if (!user) {
+                alert('No se encontró el usuario que se desea recargar.');
+                return;
+            }
+            user.balance += amount;
+            if (!savePersistentData()) {
+                user.balance -= amount;
+                return;
+            }
+            input.value = '';
+            updateUsersUI();
+            playBuySound();
+        }
+
+        function toggleAdminPanel() {
+            if (!users.some(user => user.id === currentUserId && user.role === 'admin')) {
+                alert('Solo el administrador puede abrir este panel.');
+                return;
+            }
+            const modal = document.getElementById('adminModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                updateUsersUI();
+            }
+        }
+
+        // Símbolos temáticos con FontAwesome y nombres
+        const SYMBOLS = [
+            { id: 'clover', icon: 'fa-clover', color: 'text-emerald-400', name: 'Trébol' },
+            { id: 'diamond', icon: 'fa-gem', color: 'text-cyan-400', name: 'Diamante' },
+            { id: 'star', icon: 'fa-star', color: 'text-amber-300', name: 'Estrella' },
+            { id: 'seven', icon: 'fa-7', color: 'text-rose-500', name: 'Siete' },
+            { id: 'coin', icon: 'fa-coins', color: 'text-yellow-400', name: 'Moneda' },
+            { id: 'crown', icon: 'fa-crown', color: 'text-amber-400', name: 'Corona' }
+        ];
+
+        // --- SINTETIZADOR DE SONIDOS CON TONE.JS ---
+        function playScratchSound() {
+            if (!soundEnabled) return;
+            try {
+                const noise = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.005, decay: 0.03, sustain: 0 }
+                }).toDestination();
+                noise.volume.value = -18;
+                noise.triggerAttackRelease('32n');
+            } catch(e){}
+        }
+
+        function playWinSound(isBigWin) {
+            if (!soundEnabled) return;
+            try {
+                const synth = new Tone.PolySynth().toDestination();
+                synth.volume.value = -8;
+                const now = Tone.now();
+                if (isBigWin) {
+                    synth.triggerAttackRelease(["C4", "E4", "G4", "B4"], "8n", now);
+                    synth.triggerAttackRelease(["G4", "B4", "D5", "F#5"], "8n", now + 0.15);
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "4n", now + 0.3);
+                } else {
+                    synth.triggerAttackRelease(["G4", "C5", "E5"], "8n", now);
+                    synth.triggerAttackRelease(["C5", "E5", "G5"], "4n", now + 0.15);
+                }
+            } catch(e){}
+        }
+
+        function playBuySound() {
+            if (!soundEnabled) return;
+            try {
+                const synth = new Tone.Synth().toDestination();
+                synth.volume.value = -12;
+                synth.triggerAttackRelease("C5", "16n");
+            } catch(e){}
+        }
+
+        // --- INICIALIZACIÓN DE LA GRILLA DE CASILLAS ---
+        function initGrid() {
+            const container = document.getElementById('gridContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 6; i++) {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'scratch-cell h-24 sm:h-28 bg-gradient-to-b from-purple-900 to-indigo-950 border border-purple-500/40 rounded-2xl overflow-hidden flex flex-col items-center justify-center relative shadow-inner';
+                cellDiv.id = `cell-${i}`;
+
+                // Capa inferior (Símbolo Oculto)
+                const symbolContainer = document.createElement('div');
+                symbolContainer.className = 'flex flex-col items-center justify-center w-full h-full p-2';
+                symbolContainer.id = `symbol-${i}`;
+                symbolContainer.innerHTML = `<i class="fa-solid fa-question text-purple-600/50 text-2xl"></i>`;
+
+                // Capa Superior (Canvas Rascable)
+                const canvas = document.createElement('canvas');
+                canvas.className = 'scratch-canvas';
+                canvas.id = `canvas-${i}`;
+
+                cellDiv.appendChild(symbolContainer);
+                cellDiv.appendChild(canvas);
+                container.appendChild(cellDiv);
+            }
+        }
+
+        // Dibuja la cubierta de raspado metálica dorada en una casilla
+        function drawScratchCover(index) {
+            const canvas = document.getElementById(`canvas-${index}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width || 120;
+            canvas.height = rect.height || 110;
+
+            // Gradiente metálico dorado/plateado
+            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, '#fef08a');
+            grad.addColorStop(0.3, '#eab308');
+            grad.addColorStop(0.7, '#ca8a04');
+            grad.addColorStop(1, '#854d0e');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Patrón o texto decorativo "RASPA"
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.font = 'bold 12px Poppins, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('FORTUNA', canvas.width / 2, canvas.height / 2 - 8);
+            ctx.fillText('✨ RASPA ✨', canvas.width / 2, canvas.height / 2 + 10);
+
+            // Borde brillante
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            // Eventos de raspado
+            attachScratchEvents(canvas, index);
+        }
+
+        // --- LÓGICA DE INTERACCIÓN CON EL CANVAS (RASPAR) ---
+        function attachScratchEvents(canvas, index) {
+            const ctx = canvas.getContext('2d');
+            let isDrawing = false;
+
+            function scratch(x, y) {
+                if (!cardActive) return;
+
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(x, y, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                playScratchSound();
+                checkScratchPercent(index);
+            }
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            // Mouse Events
+            canvas.addEventListener('mousedown', (e) => { isDrawing = true; const pos = getPos(e); scratch(pos.x, pos.y); });
+            canvas.addEventListener('mousemove', (e) => { if (isDrawing) { const pos = getPos(e); scratch(pos.x, pos.y); } });
+            window.addEventListener('mouseup', () => { isDrawing = false; });
+
+            // Touch Events
+            canvas.addEventListener('touchstart', (e) => { isDrawing = true; const pos = getPos(e); scratch(pos.x, pos.y); e.preventDefault(); });
+            canvas.addEventListener('touchmove', (e) => { if (isDrawing) { const pos = getPos(e); scratch(pos.x, pos.y); e.preventDefault(); } });
+            canvas.addEventListener('touchend', () => { isDrawing = false; });
+        }
+
+        // Calcular qué porcentaje de la casilla se ha raspado
+        function checkScratchPercent(index) {
+            if (scratchedCells[index] || !cardActive) return;
+
+            const canvas = document.getElementById(`canvas-${index}`);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Sub-muestreo rápido de píxeles
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const pixels = imageData.data;
+            let transparentPixels = 0;
+
+            for (let i = 3; i < pixels.length; i += 16) {
+                if (pixels[i] === 0) {
+                    transparentPixels++;
+                }
+            }
+
+            const totalSampled = pixels.length / 16;
+            const percent = (transparentPixels / totalSampled) * 100;
+
+            // Si se raspa más del 40%, revelamos la casilla por completo
+            if (percent > 40) {
+                scratchedCells[index] = true;
+                canvas.style.transition = 'opacity 0.3s ease';
+                canvas.style.opacity = '0';
+                setTimeout(() => {
+                    canvas.style.display = 'none';
+                }, 300);
+
+                checkGameCompletion();
+            }
+        }
+
+        // --- GENERADOR DE SIMBOLOS CON PROBABILIDADES ---
+        function generateTicketSymbols() {
+            // Generación de combinación
+            // Queremos dar premios realistas e interesantes.
+            const rand = Math.random();
+            let chosenSymbols = [];
+
+            if (rand < 0.08) {
+                // 8% de probabilidad: Ganador de 4 símbolos ($20)
+                const winSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                chosenSymbols = [winSymbol, winSymbol, winSymbol, winSymbol];
+                // Llenar los otros 2 con distintos
+                while (chosenSymbols.length < 6) {
+                    const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                    chosenSymbols.push(randomSym);
+                }
+            } else if (rand < 0.32) {
+                // 24% de probabilidad: Ganador de 3 símbolos ($15)
+                const winSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                chosenSymbols = [winSymbol, winSymbol, winSymbol];
+                // Llenar los otros 3 evitando llegar a 4 iguales
+                while (chosenSymbols.length < 6) {
+                    const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                    const count = chosenSymbols.filter(s => s.id === randomSym.id).length;
+                    if (count < 2) {
+                        chosenSymbols.push(randomSym);
+                    }
+                }
+            } else {
+                // 68% de probabilidad: No ganador (máximo 2 de cada uno)
+                while (chosenSymbols.length < 6) {
+                    const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                    const count = chosenSymbols.filter(s => s.id === randomSym.id).length;
+                    if (count < 2) {
+                        chosenSymbols.push(randomSym);
+                    }
+                }
+            }
+
+            // Mezclar aleatoriamente el arreglo
+            return chosenSymbols.sort(() => Math.random() - 0.5);
+        }
+
+        // --- COMPRAR TARJETA ---
+        function buyCard() {
+            if (!currentUserId) return;
+            if (balance < TICKET_PRICE) {
+                showResultBanner('<span class="text-rose-400 font-bold">⚠️ Saldo insuficiente. Pide una recarga al Administrador.</span>');
+                return;
+            }
+
+            // Tone context resume
+            if (window.Tone) Tone.start();
+
+            // Descontar saldo y sincronizar objeto usuario
+            balance -= TICKET_PRICE;
+            const currentUser = users.find(u => u.id === currentUserId);
+            if (currentUser) currentUser.balance = balance;
+
+            updateBalanceDisplay();
+            updateUsersUI();
+            playBuySound();
+
+            // Actualizar estadísticas
+            stats.played++;
+            stats.spent += TICKET_PRICE;
+            updateStatsDisplay();
+            if (!savePersistentData()) {
+                balance += TICKET_PRICE;
+                if (currentUser) currentUser.balance = balance;
+                stats.played--;
+                stats.spent -= TICKET_PRICE;
+                updateBalanceDisplay();
+                updateStatsDisplay();
+                updateUsersUI();
+                return;
+            }
+
+            // Configurar estado
+            cardActive = true;
+            gameEvaluated = false;
+            scratchedCells = [false, false, false, false, false, false];
+            currentTicketSymbols = generateTicketSymbols();
+
+            // Actualizar interfaz de la tarjeta
+            document.getElementById('ticketIdDisplay').textContent = `Boleto: #${Math.floor(100000 + Math.random() * 900000)}`;
+            document.getElementById('statusBadge').textContent = '¡En Juego!';
+            document.getElementById('statusBadge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+
+            // Habilitar botón raspar todo
+            const revealBtn = document.getElementById('revealBtn');
+            revealBtn.disabled = false;
+            revealBtn.className = 'gold-btn py-3.5 px-5 rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer';
+
+            // Deshabilitar botón comprar temporalmente o dejarlo activo
+            document.getElementById('buyBtn').disabled = true;
+            document.getElementById('buyBtn').classList.add('opacity-50', 'cursor-not-allowed');
+
+            showResultBanner('<span class="text-amber-300 font-semibold animate-pulse">✨ ¡Raspa con el ratón o tu dedo para revelar los premios! ✨</span>');
+
+            // Renderizar símbolos ocultos y cubiertas
+            for (let i = 0; i < 6; i++) {
+                const sym = currentTicketSymbols[i];
+                const symbolContainer = document.getElementById(`symbol-${i}`);
+                symbolContainer.innerHTML = `
+                    <i class="fa-solid ${sym.icon} ${sym.color} text-3xl sm:text-4xl drop-shadow-md mb-1"></i>
+                    <span class="text-[10px] sm:text-xs font-bold text-purple-200">${sym.name}</span>
+                `;
+
+                // Restablecer Canvas
+                const canvas = document.getElementById(`canvas-${i}`);
+                canvas.style.display = 'block';
+                canvas.style.opacity = '1';
+                drawScratchCover(i);
+            }
+        }
+
+        // --- REVELAR TODO AUTOMÁTICAMENTE ---
+        function revealAll() {
+            if (!cardActive) return;
+
+            for (let i = 0; i < 6; i++) {
+                if (!scratchedCells[i]) {
+                    scratchedCells[i] = true;
+                    const canvas = document.getElementById(`canvas-${i}`);
+                    canvas.style.transition = 'opacity 0.4s ease';
+                    canvas.style.opacity = '0';
+                    setTimeout(() => { canvas.style.display = 'none'; }, 400);
+                }
+            }
+
+            setTimeout(() => {
+                checkGameCompletion();
+            }, 300);
+        }
+
+        // --- VERIFICAR COMPLETITUD Y EVALUAR PREMIOS ---
+        function checkGameCompletion() {
+            const allScratched = scratchedCells.every(c => c === true);
+
+            if (allScratched && !gameEvaluated) {
+                gameEvaluated = true;
+                cardActive = false;
+
+                // Contar frecuencias de cada símbolo
+                const counts = {};
+                currentTicketSymbols.forEach(s => {
+                    counts[s.id] = (counts[s.id] || 0) + 1;
+                });
+
+                let maxCount = 0;
+                let winningSymbolId = null;
+
+                for (const [id, count] of Object.entries(counts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        winningSymbolId = id;
+                    }
+                }
+
+                const winSymbolObj = SYMBOLS.find(s => s.id === winningSymbolId);
+
+                // Evaluar resultados
+                if (maxCount >= 4) {
+                    // Premio Mayor: $20.00
+                    balance += PRIZE_4;
+                    const user = users.find(u => u.id === currentUserId);
+                    if (user) user.balance = balance;
+
+                    stats.won += PRIZE_4;
+                    updateBalanceDisplay();
+                    updateUsersUI();
+                    updateStatsDisplay();
+                    savePersistentData();
+
+                    playWinSound(true);
+                    triggerConfetti();
+
+                    highlightWinningCells(winningSymbolId);
+                    showResultBanner(`
+                        <div class="bg-gradient-to-r from-amber-500/20 to-yellow-500/30 border border-amber-400 p-3 rounded-xl w-full">
+                            <span class="text-amber-300 font-extrabold text-lg sm:text-xl block">🎉 ¡GRAN PREMIO! 🔥</span>
+                            <span class="text-xs sm:text-sm text-slate-100">¡Obtuviste <strong>4 ${winSymbolObj.name}s</strong> y ganaste <strong class="text-amber-300">$20.00</strong>!</span>
+                        </div>
+                    `);
+
+                    document.getElementById('statusBadge').textContent = '¡GANADOR $20!';
+                    document.getElementById('statusBadge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500 text-slate-950';
+
+                } else if (maxCount === 3) {
+                    // Premio Medio: $15.00
+                    balance += PRIZE_3;
+                    const user = users.find(u => u.id === currentUserId);
+                    if (user) user.balance = balance;
+
+                    stats.won += PRIZE_3;
+                    updateBalanceDisplay();
+                    updateUsersUI();
+                    updateStatsDisplay();
+                    savePersistentData();
+
+                    playWinSound(false);
+                    triggerSmallConfetti();
+
+                    highlightWinningCells(winningSymbolId);
+                    showResultBanner(`
+                        <div class="bg-gradient-to-r from-emerald-500/20 to-teal-500/30 border border-emerald-400 p-3 rounded-xl w-full">
+                            <span class="text-emerald-300 font-extrabold text-base sm:text-lg block">✨ ¡FELICIDADES! ✨</span>
+                            <span class="text-xs sm:text-sm text-slate-100">¡Obtuviste <strong>3 ${winSymbolObj.name}s</strong> y ganaste <strong class="text-emerald-300">$15.00</strong>!</span>
+                        </div>
+                    `);
+
+                    document.getElementById('statusBadge').textContent = '¡GANADOR $15!';
+                    document.getElementById('statusBadge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-600 text-white';
+
+                } else {
+                    // Sin premio
+                    showResultBanner(`
+                        <div class="text-purple-300 text-xs sm:text-sm">
+                            <span>Sigue intentando. ¡La suerte está a solo una raspadita!</span>
+                        </div>
+                    `);
+
+                    document.getElementById('statusBadge').textContent = 'Finalizado';
+                    document.getElementById('statusBadge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-purple-900/80 text-purple-400';
+                }
+
+                // Restaurar botones
+                document.getElementById('buyBtn').disabled = false;
+                document.getElementById('buyBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+
+                const revealBtn = document.getElementById('revealBtn');
+                revealBtn.disabled = true;
+                revealBtn.className = 'bg-purple-800/50 opacity-50 cursor-not-allowed text-purple-200 border border-purple-500/40 py-3.5 px-5 rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-2';
+            }
+        }
+
+        // Resaltar casillas ganadoras
+        function highlightWinningCells(symbolId) {
+            currentTicketSymbols.forEach((sym, idx) => {
+                if (sym.id === symbolId) {
+                    const cell = document.getElementById(`cell-${idx}`);
+                    cell.classList.add('border-2', 'border-amber-400', 'bg-amber-500/20', 'scale-105', 'transition-transform');
+                }
+            });
+        }
+
+        // Mostrar mensajes en la interfaz
+        function showResultBanner(htmlContent) {
+            document.getElementById('resultBanner').innerHTML = htmlContent;
+        }
+
+        // --- BILLETERA Y ESTADÍSTICAS ---
+        function updateBalanceDisplay() {
+            document.getElementById('balanceDisplay').textContent = `$${balance.toFixed(2)}`;
+            const currentUser = users.find(u => u.id === currentUserId);
+            if (currentUser) currentUser.balance = balance;
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('statPlayed').textContent = stats.played;
+            document.getElementById('statSpent').textContent = `$${stats.spent.toFixed(2)}`;
+            document.getElementById('statWon').textContent = `$${stats.won.toFixed(2)}`;
+        }
+
+        function resetStats() {
+            stats = { played: 0, spent: 0.00, won: 0.00 };
+            updateStatsDisplay();
+            savePersistentData();
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+            }
+        }
+
+        // --- INICIALIZACIÓN AL CÁRGAR ---
+        window.onload = function() {
+            initGrid();
+            updateStatsDisplay();
+            initializeAuth();
+        };
+    </script>
+</body>
+</html>
